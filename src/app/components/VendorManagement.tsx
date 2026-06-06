@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, Filter, Star, CheckCircle, XCircle, Clock, Eye, Edit, Trash2, X, Building2, Mail, Phone, MapPin } from "lucide-react";
 
 interface Vendor {
@@ -35,6 +35,8 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+const API_URL = "https://vendorbridge-production.up.railway.app";
+
 export function VendorManagement() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -42,8 +44,25 @@ export function VendorManagement() {
   const [showModal, setShowModal] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [vendors, setVendors] = useState(VENDORS);
-
   const [form, setForm] = useState({ name: "", category: "IT Equipment", contact: "", email: "", phone: "", city: "", gst: "" });
+
+  useEffect(() => {
+    fetch(`${API_URL}/vendors/`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((v: any) => ({
+            id: `V${String(v.id).padStart(3, "0")}`,
+            name: v.name, category: v.category, contact: v.name,
+            email: v.email, phone: v.phone, city: "India",
+            gst: v.gst_number, status: v.status === "active" ? "Active" : "Inactive" as "Active" | "Inactive" | "Pending",
+            rating: 0, totalOrders: 0, totalSpend: 0, joinDate: "2024"
+          }));
+          setVendors(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const filtered = vendors.filter((v) => {
     const matchSearch = v.name.toLowerCase().includes(search.toLowerCase()) || v.contact.toLowerCase().includes(search.toLowerCase());
